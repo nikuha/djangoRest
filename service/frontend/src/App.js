@@ -17,22 +17,18 @@ class App extends React.Component {
 
     componentDidMount() {
         const menu = [
-           {
-               'name': 'Пользователи',
-               'link': '/'
-           }
-       ]
+            {
+                'name': 'Пользователи',
+                'link': '/'
+            }
+        ]
+        this.setState({'menu': menu})
 
         axios.get('http://127.0.0.1:8000/api/users/')
-       .then(response => {
-           const users = response.data
-               this.setState(
-               {
-                   'users': users,
-                   'menu': menu
-               }
-           )
-       }).catch(error => console.log(error))
+            .then(response => {
+                const users = response.data
+                this.setState({'users': users})
+            }).catch(error => console.log(error))
 
     }
 
@@ -40,11 +36,11 @@ class App extends React.Component {
         return (
             <div className="container">
                 <header>
-                    <Menu menu={this.state.menu} />
+                    <Menu menu={this.state.menu}/>
                 </header>
 
                 <main>
-                    <UserList users={this.state.users} />
+                    <UserList users={this.state.users}/>
                 </main>
 
                 <footer>
