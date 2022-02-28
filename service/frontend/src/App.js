@@ -2,23 +2,34 @@ import React from 'react';
 import axios from 'axios'
 import './App.css';
 import UserList from './components/User'
+import Menu from './components/Menu'
+import Footer from './components/Footer'
 
 class App extends React.Component {
 
     constructor(props) {
         super(props)
         this.state = {
-            'users': []
+            'users': [],
+            'menu': []
         }
     }
 
     componentDidMount() {
+        const menu = [
+           {
+               'name': 'Пользователи',
+               'link': '/'
+           }
+       ]
+
         axios.get('http://127.0.0.1:8000/api/users/')
        .then(response => {
            const users = response.data
                this.setState(
                {
-                   'users': users
+                   'users': users,
+                   'menu': menu
                }
            )
        }).catch(error => console.log(error))
@@ -27,8 +38,19 @@ class App extends React.Component {
 
     render() {
         return (
-            <div>
-                <UserList users={this.state.users} />
+            <div className="container">
+                <header>
+                    <Menu menu={this.state.menu} />
+                </header>
+
+                <main>
+                    <UserList users={this.state.users} />
+                </main>
+
+                <footer>
+                    <Footer/>
+                </footer>
+
             </div>
         );
     }

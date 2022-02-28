@@ -11,12 +11,18 @@ const UserItem = ({user}) => {
 
 const UserList = ({users}) => {
     return (
-        <table>
-            <th>Логин</th>
-            <th>Имя</th>
-            <th>Фамилия</th>
-            <th>E-Mail</th>
-            {users.map((user) => <UserItem user={user}/>)}
+        <table className="table mt-2">
+            <thead>
+                <tr>
+                    <th>Логин</th>
+                    <th>Имя</th>
+                    <th>Фамилия</th>
+                    <th>E-Mail</th>
+                </tr>
+            </thead>
+            <tbody>
+                {users.map((user, i) => <UserItem user={user} key={i}/>)}
+            </tbody>
         </table>
     )
 }
