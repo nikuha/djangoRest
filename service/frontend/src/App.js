@@ -5,6 +5,9 @@ import UserList from './components/User'
 import Menu from './components/Menu'
 import Footer from './components/Footer'
 
+const API_ROOT = 'http://127.0.0.1:8000/api/';
+const get_api_url = (method) => `${API_ROOT}${method}/`;
+
 class App extends React.Component {
 
     constructor(props) {
@@ -24,12 +27,11 @@ class App extends React.Component {
         ]
         this.setState({'menu': menu})
 
-        axios.get('http://127.0.0.1:8000/api/users/')
+        axios.get(get_api_url('users'))
             .then(response => {
                 const users = response.data
                 this.setState({'users': users})
             }).catch(error => console.log(error))
-
     }
 
     render() {
