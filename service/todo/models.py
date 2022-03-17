@@ -8,7 +8,7 @@ from users.models import User
 class Project(models.Model):
     uid = models.UUIDField(primary_key=True, default=uuid4)
     name = models.CharField(verbose_name='Название', max_length=128)
-    repository = models.CharField(verbose_name='Репозиторий', max_length=256)
+    repository = models.URLField(verbose_name='Репозиторий')
     users = models.ManyToManyField(User)
 
     def __str__(self):
