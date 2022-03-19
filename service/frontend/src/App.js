@@ -67,7 +67,7 @@ class App extends React.Component {
                         <Route path="/project/:uid/" element={<ProjectInfo projects={this.state.projects}/>} />
                         <Route path="/todos" element={<TodoList todos={this.state.todos}/>} />
                         <Route path="/users" element={<Navigate replace to="/" />} />
-                        <Route exact path="*"  element={<PageNotFound/>} />
+                        <Route path="*"  element={<PageNotFound/>} />
                     </Routes>
                 </HashRouter>
 

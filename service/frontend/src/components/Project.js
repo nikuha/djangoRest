@@ -1,4 +1,5 @@
 import {Link, useParams} from "react-router-dom";
+import React from "react";
 
 const ProjectItem = ({project}) => {
     return (
@@ -28,6 +29,13 @@ const ProjectList = ({projects}) => {
 const ProjectInfo = ({projects}) => {
     const {uid} = useParams();
     const project = projects.find((item) => item.uid === uid);
+    if(!project) {
+        return (
+            <div>
+                <h4 className="mt-4 text-center">Проект не найден!</h4>
+            </div>
+        )
+    }
     return (
         <div className="mt-4">
             <h4 className="text-center">{project.name}</h4>
