@@ -5,7 +5,7 @@ from .models import User
 class UserModelSerializer(HyperlinkedModelSerializer):
     class Meta:
         model = User
-        fields = ('url', 'username', 'email', 'first_name', 'last_name')
+        fields = ('uid', 'username', 'email', 'first_name', 'last_name')
 
 
 class UserListRelatedField(RelatedField):

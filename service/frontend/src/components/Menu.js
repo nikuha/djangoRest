@@ -1,8 +1,9 @@
 import React from "react";
+import {Link} from "react-router-dom";
 
 const MenuItem = ({menu_item}) => {
     return (
-        <a className="nav-link" href={menu_item.link}>{menu_item.name}</a>
+        <Link className="nav-link" to={menu_item.link}>{menu_item.name}</Link>
     )
 }
 
