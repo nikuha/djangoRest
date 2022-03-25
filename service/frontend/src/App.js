@@ -22,15 +22,28 @@ class App extends React.Component {
             'users': [],
             'projects': [],
             'todos': [],
+            'project': {}
         }
     }
 
-    get_api_data(name) {
+    getApiData(name) {
 
         axios.get(get_api_url(name))
             .then(response => {
                 this.setState({[name]: response.data.results})
             }).catch(error => console.log(error))
+
+    }
+
+    getProject(uid) {
+
+        // this.setState({project: {}});
+        axios.get(get_api_url(`projects/${uid}`))
+            .then(response => {
+                this.setState({project: response.data})
+            }).catch(error => {
+                this.setState({project: {uid: uid}})
+            })
 
     }
 
@@ -51,9 +64,9 @@ class App extends React.Component {
         ]
         this.setState({'menu': menu});
 
-        this.get_api_data('users');
-        this.get_api_data('projects');
-        this.get_api_data('todos');
+        this.getApiData('users');
+        this.getApiData('projects');
+        this.getApiData('todos');
     }
 
     render() {
@@ -64,7 +77,8 @@ class App extends React.Component {
                     <Routes>
                         <Route path="/" element={<UserList users={this.state.users}/>} />
                         <Route path="/projects" element={<ProjectList projects={this.state.projects}/>} />
-                        <Route path="/project/:uid/" element={<ProjectInfo projects={this.state.projects}/>} />
+                        <Route path="/project/:uid/" element={<ProjectInfo project={this.state.project}
+                                                                           getProject={(uid) => this.getProject(uid)}/>}/>
                         <Route path="/todos" element={<TodoList todos={this.state.todos}/>} />
                         <Route path="/users" element={<Navigate replace to="/" />} />
                         <Route path="*"  element={<PageNotFound/>} />

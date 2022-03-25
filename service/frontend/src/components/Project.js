@@ -26,10 +26,12 @@ const ProjectList = ({projects}) => {
     )
 }
 
-const ProjectInfo = ({projects}) => {
+const ProjectInfo = ({getProject, project}) => {
     const {uid} = useParams();
-    const project = projects.find((item) => item.uid === uid);
-    if(!project) {
+    if(uid !== project.uid){
+        getProject(uid);
+    }
+    if(project.name === undefined) {
         return (
             <div>
                 <h4 className="mt-4 text-center">Проект не найден!</h4>
@@ -40,13 +42,12 @@ const ProjectInfo = ({projects}) => {
         <div className="mt-4">
             <h4 className="text-center">{project.name}</h4>
             <div className="mt-2">
-                Репозиторий: <a href={project.repository} target="_blank">{project.repository}</a>
+                Репозиторий: <a href={project.repository} target="_blank" rel="noreferrer">{project.repository}</a>
             </div>
             <div className="mt-2">
                 Пользователи:
                 {project.users.map((user) => `${user.firstName} ${user.lastName}`).join(', ')}
             </div>
-
         </div>
     )
 }
