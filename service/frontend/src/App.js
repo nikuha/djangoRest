@@ -117,10 +117,15 @@ class App extends React.Component {
                         <Route path="/" element={this.is_authenticated() ?
                             <UserList users={this.state.users}/> :
                             <Navigate replace to="/login/" />} />
-                        <Route path="/projects/" element={<ProjectList projects={this.state.projects}/>} />
-                        <Route path="/project/:uid/" element={<ProjectInfo project={this.state.project}
-                                                                           getProject={(uid) => this.getProject(uid)}/>}/>
-                        <Route path="/todos/" element={<TodoList todos={this.state.todos}/>} />
+                        <Route path="/projects/" element={this.is_authenticated() ?
+                            <ProjectList projects={this.state.projects}/>:
+                            <Navigate replace to="/login/" />} />
+                        <Route path="/project/:uid/" element={this.is_authenticated() ?
+                            <ProjectInfo project={this.state.project} getProject={(uid) => this.getProject(uid)}/> :
+                            <Navigate replace to="/login/" />}/>
+                        <Route path="/todos/" element={this.is_authenticated() ?
+                            <TodoList todos={this.state.todos}/>:
+                            <Navigate replace to="/login/" />} />
                         <Route path="/users/" element={<Navigate replace to="/" />} />
                         <Route path="/login/" element={this.is_authenticated() ? <Navigate replace to="/projects" /> :
                             <LoginForm login={(username, password) => this.login(username, password)}/>} />
