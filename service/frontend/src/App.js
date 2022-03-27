@@ -74,7 +74,7 @@ class App extends React.Component {
     }
 
     is_authenticated() {
-        return this.state.token.length > 0;
+        return this.state.token && this.state.token.length;
     }
 
     getHeaders() {
@@ -92,9 +92,7 @@ class App extends React.Component {
             this.getApiData('todos')
         }
         else {
-            this.setState({users: []})
-            this.setState({projects: []})
-            this.setState({todos: []})
+            this.setState({users: [], projects: [], todos: []})
         }
     }
 
