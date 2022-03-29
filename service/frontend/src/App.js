@@ -4,7 +4,7 @@ import './App.css';
 import UserList from './components/User';
 import {ProjectInfo, ProjectList} from './components/Project';
 import TodoList from "./components/Todo";
-import Menu from './components/Menu';
+import {Menu} from './components/Menu';
 import Footer from './components/Footer';
 import PageNotFound from './components/PageNotFound';
 import LoginForm from "./components/LoginForm";
@@ -15,7 +15,6 @@ import Cookies from 'universal-cookie';
 
 const API_ROOT = 'http://127.0.0.1:8000/';
 const getApiUrl = (method) => `${API_ROOT}api/${method}/`;
-const getAuthUrl = (method) => `${API_ROOT}${method}/`;
 
 class App extends React.Component {
 
@@ -27,7 +26,7 @@ class App extends React.Component {
             projects: [],
             todos: [],
             project: {},
-            token: ''
+            auth: {username: '', is_authenticated: false}
         }
     }
 
@@ -36,7 +35,11 @@ class App extends React.Component {
         axios.get(getApiUrl(name), {headers})
             .then(response => {
                 this.setState({[name]: response.data.results})
-            }).catch(error => console.log(error))
+            }).catch(error => {
+                if(error.response.status === 401){
+                    this.refresh()
+                }
+            })
     }
 
     getProject(uid) {
@@ -49,44 +52,60 @@ class App extends React.Component {
             })
     }
 
-    setToken(token) {
-        const cookies = new Cookies()
-        cookies.set('token', token)
-        this.setState({token: token})
-        this.loadData()
+    setAuthState(username, is_authenticated) {
+        this.setState({
+            auth: {username: username, is_authenticated: is_authenticated}},
+            ()=>this.loadData()
+        )
     }
 
     getTokenFromStorage() {
         const cookies = new Cookies()
-        const token = cookies.get('token')
-        this.setState({'token': token}, ()=>this.loadData())
+        const is_authenticated = cookies.get('access') && cookies.get('access') !== ''
+        const username = cookies.get('username')
+        this.setAuthState(username, is_authenticated)
     }
 
     login(username, password) {
-        axios.post(getAuthUrl(`api-token-auth`), {username: username, password: password})
+        axios.post(getApiUrl('token'), {username: username, password: password})
             .then(response => {
-                this.setToken(response.data.token)
+                const cookies = new Cookies()
+                cookies.set('access', response.data.access)
+                cookies.set('refresh', response.data.refresh)
+                cookies.set('username', username)
+                this.setAuthState(username, true)
             }).catch(error => alert('Неверные данные авторизации!'))
     }
 
-    logout() {
-        this.setToken('')
+    refresh() {
+        const cookies = new Cookies()
+        const refresh = cookies.get('refresh')
+        axios.post(getApiUrl('token/refresh'), {refresh: refresh})
+            .then(response => {
+                const username = cookies.get('username')
+                cookies.set('access', response.data.access)
+                this.setAuthState(username, true)
+            }).catch(error => this.logout())
     }
 
-    is_authenticated() {
-        return this.state.token && this.state.token.length;
+    logout() {
+        const cookies = new Cookies()
+        cookies.remove('access')
+        cookies.remove('refresh')
+        this.setAuthState('', false)
     }
 
     getHeaders() {
         let headers = {'Content-Type': 'application/json'}
-        if (this.is_authenticated()) {
-            headers['Authorization'] = 'Token ' + this.state.token
+        if (this.state.auth.is_authenticated) {
+            const cookies = new Cookies()
+            headers['Authorization'] = 'Bearer ' + cookies.get('access')
         }
         return headers
     }
 
     loadData() {
-        if(this.is_authenticated()){
+        if(this.state.auth.is_authenticated){
             this.getApiData('users')
             this.getApiData('projects')
             this.getApiData('todos')
@@ -101,36 +120,36 @@ class App extends React.Component {
         const menu = [
             {name: 'Пользователи', link: '/'},
             {name: 'Проекты', link: '/projects/'},
-            {name: 'Todo', link: '/todos/'},
-            {name: 'Вход', link: '/login/'}
+            {name: 'Todo', link: '/todos/'}
         ]
         this.setState({'menu': menu})
     }
 
     render() {
         return (
-            <div className="container d-flex flex-column min-vh-100">
+            <div className="d-flex flex-column min-vh-100">
                 <HashRouter>
-                    <Menu menu={this.state.menu} is_authenticated={() => this.is_authenticated()}
-                        logout={() => this.logout()}/>
-                    <Routes>
-                        <Route path="/" element={this.is_authenticated() ?
-                            <UserList users={this.state.users}/> :
-                            <Navigate replace to="/login/" />} />
-                        <Route path="/projects/" element={this.is_authenticated() ?
-                            <ProjectList projects={this.state.projects}/>:
-                            <Navigate replace to="/login/" />} />
-                        <Route path="/project/:uid/" element={this.is_authenticated() ?
-                            <ProjectInfo project={this.state.project} getProject={(uid) => this.getProject(uid)}/> :
-                            <Navigate replace to="/login/" />}/>
-                        <Route path="/todos/" element={this.is_authenticated() ?
-                            <TodoList todos={this.state.todos}/>:
-                            <Navigate replace to="/login/" />} />
-                        <Route path="/users/" element={<Navigate replace to="/" />} />
-                        <Route path="/login/" element={this.is_authenticated() ? <Navigate replace to="/projects" /> :
-                            <LoginForm login={(username, password) => this.login(username, password)}/>} />
-                        <Route path="*"  element={<PageNotFound/>} />
-                    </Routes>
+                    <Menu menu={this.state.menu} auth={this.state.auth} logout={() => this.logout()}/>
+                    <div className="container">
+                        <Routes>
+                            <Route path="/" element={this.state.auth.is_authenticated ?
+                                <UserList users={this.state.users}/> :
+                                <Navigate replace to="/login/" />} />
+                            <Route path="/projects/" element={this.state.auth.is_authenticated ?
+                                <ProjectList projects={this.state.projects}/>:
+                                <Navigate replace to="/login/" />} />
+                            <Route path="/project/:uid/" element={this.state.auth.is_authenticated ?
+                                <ProjectInfo project={this.state.project} getProject={(uid) => this.getProject(uid)}/> :
+                                <Navigate replace to="/login/" />}/>
+                            <Route path="/todos/" element={this.state.auth.is_authenticated ?
+                                <TodoList todos={this.state.todos}/>:
+                                <Navigate replace to="/login/" />} />
+                            <Route path="/users/" element={<Navigate replace to="/" />} />
+                            <Route path="/login/" element={this.state.auth.is_authenticated ? <Navigate replace to="/projects" /> :
+                                <LoginForm login={(username, password) => this.login(username, password)}/>} />
+                            <Route path="*"  element={<PageNotFound/>} />
+                        </Routes>
+                    </div>
                 </HashRouter>
 
                 <Footer/>
