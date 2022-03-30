@@ -4,11 +4,11 @@ from rest_framework.routers import DefaultRouter
 from rest_framework.authtoken import views as auth_views
 
 import todo.views as todo_views
-from users.views import UserCustomViewSet
+from users.views import UserViewSet
 from rest_framework_simplejwt.views import (TokenObtainPairView, TokenRefreshView)
 
 router = DefaultRouter()
-router.register('users', UserCustomViewSet)
+router.register('users', UserViewSet)
 router.register('projects', todo_views.ProjectModelViewSet)
 router.register('todos', todo_views.TodoModelViewSet)
 

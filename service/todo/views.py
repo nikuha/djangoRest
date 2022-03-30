@@ -7,7 +7,8 @@ from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.viewsets import ModelViewSet
 
 from .models import Project, Todo
-from .serializers import ProjectModelSerializer, TodoModelSerializer, SimpleProjectModelSerializer
+from .serializers import ProjectModelSerializer, TodoModelSerializer, SimpleProjectModelSerializer, \
+    ProjectUserRelatedSerializer, TodoRelatedModelSerializer
 from .filters import ProjectFilter, TodoFilter
 
 
@@ -17,13 +18,16 @@ class ProjectLimitOffsetPagination(LimitOffsetPagination):
 
 class ProjectModelViewSet(ModelViewSet):
     queryset = Project.objects.all()
-    serializer_class = ProjectModelSerializer
     filterset_class = ProjectFilter
     pagination_class = ProjectLimitOffsetPagination
+    serializers = {
+        'list': ProjectModelSerializer,
+        'retrieve': ProjectModelSerializer,
+        'default': ProjectUserRelatedSerializer,
+    }
 
-    # def get_queryset(self):
-    #     name = self.request.query_params.get('name', '')
-    #     return super().get_queryset().filter(name__contains=name)
+    def get_serializer_class(self):
+        return self.serializers.get(self.action, self.serializers['default'])
 
 
 class TodoLimitOffsetPagination(LimitOffsetPagination):
@@ -32,7 +36,6 @@ class TodoLimitOffsetPagination(LimitOffsetPagination):
 
 class TodoModelViewSet(ModelViewSet):
     queryset = Todo.objects.all()
-    serializer_class = TodoModelSerializer
     pagination_class = TodoLimitOffsetPagination
     # filterset_fields = ['project']
     filterset_class = TodoFilter
@@ -41,6 +44,11 @@ class TodoModelViewSet(ModelViewSet):
         instance.done = True
         instance.save()
 
+    def get_serializer_class(self):
+        if self.request.method in ['GET']:
+            return TodoModelSerializer
+        else:
+            return TodoRelatedModelSerializer
 
 # @api_view(['GET'])
 # @renderer_classes([JSONRenderer])

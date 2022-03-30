@@ -48,6 +48,9 @@ class App extends React.Component {
             .then(response => {
                 this.setState({project: response.data})
             }).catch(error => {
+                if(error.response.status === 401){
+                    this.refresh()
+                }
                 this.setState({project: {uid: uid}})
             })
     }
