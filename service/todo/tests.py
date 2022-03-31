@@ -1,8 +1,8 @@
-from pprint import pprint
-
 from django.contrib.auth import get_user_model
 from django.test import TestCase
-from rest_framework.test import APIRequestFactory, force_authenticate, APIClient, APITestCase
+from requests.auth import HTTPBasicAuth
+from rest_framework.test import APIRequestFactory, force_authenticate, \
+    APIClient, APITestCase, CoreAPIClient
 from rest_framework import status
 from mixer.backend.django import mixer
 
@@ -117,3 +117,14 @@ class TestApiTodoViewSet(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         todo = Todo.objects.get(uid=todo.uid)
         self.assertEqual(todo.text, 'New Text')
+
+    def test_core_api_client(self):
+        client = CoreAPIClient()
+        client.session.auth = HTTPBasicAuth(self.admin.username, 'geekbrains')
+        client.session.headers.update({'x-test': 'true'})
+        data = client.get('http://127.0.0.1:8000/api/projects/')
+        assert 'results' in data.keys()
+
+        # использовать, если установлена schema
+        # schema = client.get('http://127.0.0.1:8000/schema/')
+        # data = client.action(schema, ['projects', 'create'], self.project_data)
