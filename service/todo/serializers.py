@@ -1,4 +1,4 @@
-from rest_framework.relations import StringRelatedField
+from rest_framework.relations import StringRelatedField, RelatedField
 from rest_framework.serializers import HyperlinkedModelSerializer, ModelSerializer
 
 from users.models import User
@@ -14,15 +14,43 @@ class ProjectModelSerializer(ModelSerializer):
         fields = '__all__'
 
 
+class ProjectUserRelatedSerializer(ModelSerializer):
+    users = UserListRelatedField(many=True)
+
+    class Meta:
+        model = Project
+        fields = '__all__'
+
+
 class SimpleProjectModelSerializer(HyperlinkedModelSerializer):
     class Meta:
         model = Project
         fields = ('name',)
 
 
+class ProjectRelatedField(RelatedField):
+    def to_representation(self, value):
+        return f'{value.uid}'
+
+    def to_internal_value(self, data):
+        return Project.objects.get(uid=data)
+
+    def get_queryset(self):
+        return Project.objects.all()
+
+
 class TodoModelSerializer(HyperlinkedModelSerializer):
     user = UserModelSerializer()
     project = SimpleProjectModelSerializer()
+
+    class Meta:
+        model = Todo
+        fields = '__all__'
+
+
+class TodoRelatedModelSerializer(HyperlinkedModelSerializer):
+    user = UserListRelatedField()
+    project = ProjectRelatedField()
 
     class Meta:
         model = Todo
