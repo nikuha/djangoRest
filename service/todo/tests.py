@@ -121,10 +121,10 @@ class TestApiTodoViewSet(APITestCase):
     def test_core_api_client(self):
         client = CoreAPIClient()
         client.session.auth = HTTPBasicAuth(self.admin.username, 'geekbrains')
-        client.session.headers.update({'x-test': 'true'})
-        data = client.get('http://127.0.0.1:8000/api/projects/')
-        assert 'results' in data.keys()
 
-        # использовать, если установлена schema
-        # schema = client.get('http://127.0.0.1:8000/schema/')
-        # data = client.action(schema, ['projects', 'create'], self.project_data)
+        schema = client.get('http://127.0.0.1:8000/schema/?format=corejson')
+        # print(schema)
+        self.project_data['users'] = []
+        data = client.action(schema, ['projects', 'create'], self.project_data)
+        # print(data)
+        assert 'uid' in data.keys()
