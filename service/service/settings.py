@@ -167,3 +167,9 @@ CORS_ALLOWED_ORIGINS = [
 SIMPLE_JWT = {
     'USER_ID_FIELD': 'uid'
 }
+
+SWAGGER_SETTINGS = {
+    # 'USE_SESSION_AUTH': False,
+    'LOGIN_URL': '/api/auth/login',
+    'LOGOUT_URL': '/api/auth/logout',
+}
