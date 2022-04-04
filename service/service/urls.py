@@ -37,12 +37,13 @@ router.register('todos', todo_views.TodoModelViewSet)
 urlpatterns = [
     path('admin/', admin.site.urls),
 
-    path('api-auth/', include('rest_framework.urls')),
+    path('api/auth/', include('rest_framework.urls')),
     path('api/token-auth/', auth_views.obtain_auth_token),
-    path('api/', include(router.urls)),
+    path('api/jwt/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
+    path('api/jwt/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
 
-    path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
-    path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+    # path('api/', include(router.urls)),
+    re_path(r'^api/(?P<version>v\d)/', include(router.urls)),
 
     re_path(r'^swagger(?P<format>\.json|\.yaml)$', schema_view.without_ui(cache_timeout=0), name='schema-json'),
     path('swagger/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),

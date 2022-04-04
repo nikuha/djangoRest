@@ -14,7 +14,13 @@ import Cookies from 'universal-cookie';
 
 
 const API_ROOT = 'http://127.0.0.1:8000/';
-const getApiUrl = (method) => `${API_ROOT}api/${method}/`;
+const API_VERSION = 'v1';
+const getApiUrl = (method, use_version) => {
+    if(use_version) {
+        return `${API_ROOT}api/${API_VERSION}/${method}/`
+    }
+    return `${API_ROOT}api/${method}/`
+};
 
 class App extends React.Component {
 
@@ -32,7 +38,7 @@ class App extends React.Component {
 
     getApiData(name) {
         const headers = this.getHeaders()
-        axios.get(getApiUrl(name), {headers})
+        axios.get(getApiUrl(name, true), {headers})
             .then(response => {
                 this.setState({[name]: response.data.results})
             }).catch(error => {
@@ -44,7 +50,7 @@ class App extends React.Component {
 
     getProject(uid) {
         const headers = this.getHeaders()
-        axios.get(getApiUrl(`projects/${uid}`), {headers})
+        axios.get(getApiUrl(`projects/${uid}`, true), {headers})
             .then(response => {
                 this.setState({project: response.data})
             }).catch(error => {
@@ -70,7 +76,7 @@ class App extends React.Component {
     }
 
     login(username, password) {
-        axios.post(getApiUrl('token'), {username: username, password: password})
+        axios.post(getApiUrl('jwt/token'), {username: username, password: password})
             .then(response => {
                 const cookies = new Cookies()
                 cookies.set('access', response.data.access)
@@ -83,7 +89,7 @@ class App extends React.Component {
     refresh() {
         const cookies = new Cookies()
         const refresh = cookies.get('refresh')
-        axios.post(getApiUrl('token/refresh'), {refresh: refresh})
+        axios.post(getApiUrl('jwt/token/refresh'), {refresh: refresh})
             .then(response => {
                 const username = cookies.get('username')
                 cookies.set('access', response.data.access)
