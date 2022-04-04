@@ -26,6 +26,7 @@ schema_view = get_schema_view(
 
 rf_schema_view = rf_schema(
     title='TODO API',
+    renderer_classes=(renderers.BrowsableAPIRenderer, renderers.CoreJSONRenderer)
 )
 
 router = DefaultRouter()

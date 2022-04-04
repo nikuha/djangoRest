@@ -127,4 +127,4 @@ class TestApiTodoViewSet(APITestCase):
         self.project_data['users'] = []
         data = client.action(schema, ['projects', 'create'], self.project_data)
         # print(data)
-        assert 'uid' in data.keys()
+        self.assertEqual('uid' in data.keys(), True)
