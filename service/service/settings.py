@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     'todo',
     'django_filters',
     'rest_framework_simplejwt',
+    'drf_yasg',
 ]
 
 MIDDLEWARE = [
@@ -154,8 +155,9 @@ REST_FRAMEWORK = {
         'rest_framework.authentication.SessionAuthentication',
         'rest_framework.authentication.TokenAuthentication',
         'rest_framework_simplejwt.authentication.JWTAuthentication',
-    ]
-
+    ],
+    'DEFAULT_SCHEMA_CLASS': 'rest_framework.schemas.coreapi.AutoSchema',
+    'DEFAULT_VERSIONING_CLASS': 'rest_framework.versioning.URLPathVersioning',
 }
 
 CORS_ALLOWED_ORIGINS = [
@@ -164,4 +166,10 @@ CORS_ALLOWED_ORIGINS = [
 
 SIMPLE_JWT = {
     'USER_ID_FIELD': 'uid'
+}
+
+SWAGGER_SETTINGS = {
+    # 'USE_SESSION_AUTH': False,
+    'LOGIN_URL': '/api/auth/login',
+    'LOGOUT_URL': '/api/auth/logout',
 }

@@ -8,6 +8,12 @@ class UserModelSerializer(HyperlinkedModelSerializer):
         fields = ('uid', 'username', 'email', 'first_name', 'last_name')
 
 
+class UserExtendedModelSerializer(HyperlinkedModelSerializer):
+    class Meta:
+        model = User
+        fields = ('uid', 'username', 'email', 'first_name', 'last_name', 'is_superuser', 'is_staff')
+
+
 class UserListRelatedField(RelatedField):
     def to_representation(self, value):
         return f'{value.uid}'

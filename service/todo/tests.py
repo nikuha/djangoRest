@@ -27,7 +27,7 @@ class TestProjectViewSet(TestCase):
 
     def test_get_list_for_guest(self):
         factory = APIRequestFactory()
-        request = factory.get('/api/projects/')
+        request = factory.get('/api/v1/projects/')
         view = ProjectModelViewSet.as_view({'get': 'list'})
         response = view(request)
         # response.render()
@@ -36,7 +36,7 @@ class TestProjectViewSet(TestCase):
 
     def test_get_list_for_user(self):
         factory = APIRequestFactory()
-        request = factory.get('/api/projects/')
+        request = factory.get('/api/v1/projects/')
         force_authenticate(request, self.user)
         view = ProjectModelViewSet.as_view({'get': 'list'})
         response = view(request)
@@ -44,7 +44,7 @@ class TestProjectViewSet(TestCase):
 
     def test_create_for_user(self):
         factory = APIRequestFactory()
-        request = factory.post('/api/projects/', self.project_data, format='json')
+        request = factory.post('/api/v1/projects/', self.project_data, format='json')
         force_authenticate(request, self.user)
         view = ProjectModelViewSet.as_view({'post': 'create'})
         response = view(request)
@@ -52,7 +52,7 @@ class TestProjectViewSet(TestCase):
 
     def test_create_for_admin(self):
         factory = APIRequestFactory()
-        request = factory.post('/api/projects/', self.project_data, format='json')
+        request = factory.post('/api/v1/projects/', self.project_data, format='json')
         force_authenticate(request, self.admin)
         view = ProjectModelViewSet.as_view({'post': 'create'})
         response = view(request)
@@ -62,7 +62,7 @@ class TestProjectViewSet(TestCase):
         self.project_data.pop('users', None)
         project = Project.objects.create(**self.project_data)
         client = APIClient()
-        response = client.get(f'/api/projects/{project.uid}/')
+        response = client.get(f'/api/v1/projects/{project.uid}/')
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
         client.logout()
 
@@ -71,7 +71,7 @@ class TestProjectViewSet(TestCase):
         project = Project.objects.create(**self.project_data)
         client = APIClient()
         client.login(username=self.user.username, password='geekbrains')
-        response = client.get(f'/api/projects/{project.uid}/')
+        response = client.get(f'/api/v1/projects/{project.uid}/')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         client.logout()
 
@@ -104,7 +104,7 @@ class TestApiTodoViewSet(APITestCase):
             'project': self.project.uid,
             'text': 'Todo text 2'
         }
-        response = self.client.put(f'/api/todos/{self.todo.uid}/', new_todo_data)
+        response = self.client.put(f'/api/v1/todos/{self.todo.uid}/', new_todo_data)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         todo = Todo.objects.get(uid=self.todo.uid)
         self.assertEqual(todo.user_id, self.admin.uid)
@@ -113,7 +113,7 @@ class TestApiTodoViewSet(APITestCase):
     def test_put_for_admin_mixer(self):
         self.client.force_login(self.admin)
         todo = mixer.blend(Todo)
-        response = self.client.patch(f'/api/todos/{todo.uid}/', {'text': 'New Text'})
+        response = self.client.patch(f'/api/v1/todos/{todo.uid}/', {'text': 'New Text'})
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         todo = Todo.objects.get(uid=todo.uid)
         self.assertEqual(todo.text, 'New Text')
@@ -121,10 +121,16 @@ class TestApiTodoViewSet(APITestCase):
     def test_core_api_client(self):
         client = CoreAPIClient()
         client.session.auth = HTTPBasicAuth(self.admin.username, 'geekbrains')
-        client.session.headers.update({'x-test': 'true'})
-        data = client.get('http://127.0.0.1:8000/api/projects/')
-        assert 'results' in data.keys()
 
-        # использовать, если установлена schema
-        # schema = client.get('http://127.0.0.1:8000/schema/')
-        # data = client.action(schema, ['projects', 'create'], self.project_data)
+        schema = client.get('http://127.0.0.1:8000/schema/?format=corejson')
+        # print(schema)
+
+        data = client.action(schema, ['api', 'projects', 'list'], {'version': 'v1'})
+        self.assertEqual('results' in data.keys(), True)
+
+        params = self.project_data
+        params['users'] = []
+        params['version'] = 'v1'
+        data = client.action(schema, ['api', 'projects', 'create'], params)
+        # print(data)
+        self.assertEqual('uid' in data.keys(), True)
