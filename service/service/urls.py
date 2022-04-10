@@ -12,6 +12,8 @@ import todo.views as todo_views
 from users.views import UserViewSet
 from rest_framework_simplejwt.views import (TokenObtainPairView, TokenRefreshView)
 
+from graphene_django.views import GraphQLView
+
 schema_view = get_schema_view(
     openapi.Info(
         title="TODO API",
@@ -51,6 +53,8 @@ urlpatterns = [
 
     # live-test
     path('schema/', rf_schema_view),
+
+    path('graphql', GraphQLView.as_view(graphiql=True)),
 
     # path('view/projects/', todo_views.ProjectApiView.as_view()),
     # path('view/projects/create/', todo_views.CreateProjectApiView.as_view()),
