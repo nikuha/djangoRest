@@ -22,7 +22,7 @@ class ProjectUserRelatedSerializer(ModelSerializer):
         fields = '__all__'
 
 
-class SimpleProjectModelSerializer(HyperlinkedModelSerializer):
+class SimpleProjectModelSerializer(ModelSerializer):
     class Meta:
         model = Project
         fields = ('name',)
@@ -39,7 +39,7 @@ class ProjectRelatedField(RelatedField):
         return Project.objects.all()
 
 
-class TodoModelSerializer(HyperlinkedModelSerializer):
+class TodoModelSerializer(ModelSerializer):
     user = UserModelSerializer()
     project = SimpleProjectModelSerializer()
 
@@ -48,7 +48,7 @@ class TodoModelSerializer(HyperlinkedModelSerializer):
         fields = '__all__'
 
 
-class TodoRelatedModelSerializer(HyperlinkedModelSerializer):
+class TodoRelatedModelSerializer(ModelSerializer):
     user = UserListRelatedField()
     project = ProjectRelatedField()
 

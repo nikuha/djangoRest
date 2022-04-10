@@ -1,28 +1,42 @@
 import {Link, useParams} from "react-router-dom";
 import React from "react";
 
-const ProjectItem = ({project}) => {
+const ProjectItem = ({project, deleteProject}) => {
     return (
         <tr>
             <td><Link to={`/project/${project.uid}`}>{project.name}</Link></td>
-            <td>{project.repository}</td>
+            <td><a href={project.repository} target="_blank">{project.repository}</a></td>
+            <td>
+                <button className="btn btn-danger"
+                        onClick={(uid) => deleteProject(project.uid)}>
+                    Удалить
+                </button>
+            </td>
         </tr>
     )
 }
 
-const ProjectList = ({projects}) => {
+const ProjectList = ({projects, deleteProject}) => {
     return (
-        <table className="table mt-2">
-            <thead>
-                <tr>
-                    <th>Название</th>
-                    <th>Репозиторий</th>
-                </tr>
-            </thead>
-            <tbody>
-                {projects.map((project, i) => <ProjectItem project={project} key={i}/>)}
-            </tbody>
-        </table>
+        <>
+            <div className="mt-4 text-right">
+                <Link to="/project/create/"><button className="btn btn-info float-right">Добавить проект</button></Link>
+            </div>
+            <table className="table mt-2">
+                <thead>
+                    <tr>
+                        <th>Название</th>
+                        <th>Репозиторий</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {projects.map((project, i) => <ProjectItem project={project}
+                                                               deleteProject={(uid) => deleteProject(uid)}
+                                                               key={i}/>)}
+                </tbody>
+            </table>
+        </>
     )
 }
 
