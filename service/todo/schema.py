@@ -1,3 +1,4 @@
+from django.db.models import Q
 from graphene import Schema, ObjectType, String, List, Field, ID, Boolean, Mutation
 from graphene_django import DjangoObjectType
 
@@ -29,6 +30,7 @@ class Query(ObjectType):
     users = List(UserObjectType)
     user_by_id = Field(UserObjectType, uid=ID(required=True))
     projects_by_name = List(ProjectObjectType, name=String(default_value=''))
+    users_by_name = List(UserObjectType, name=String(default_value=''))
 
     def resolve_projects(self, info):
         return Project.objects.all()
@@ -44,6 +46,9 @@ class Query(ObjectType):
 
     def resolve_projects_by_name(self, info, name):
         return Project.objects.filter(name__contains=name)
+
+    def resolve_users_by_name(self, info, name):
+        return User.objects.filter(Q(first_name__contains=name) | Q(last_name__contains=name))
 
 
 class TodoMutation(Mutation):
@@ -72,6 +77,15 @@ schema = Schema(query=Query, mutation=Mutation)
 # {
 #   projectsByName(name: "проект") {
 #     name
+#   }
+# }
+
+# поиск по имени юзера
+# {
+#   usersByName(name: "django") {
+#     username
+#     firstName
+#     lastName
 #   }
 # }
 
