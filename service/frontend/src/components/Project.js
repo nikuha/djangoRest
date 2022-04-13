@@ -16,11 +16,17 @@ const ProjectItem = ({project, deleteProject}) => {
     )
 }
 
-const ProjectList = ({projects, deleteProject}) => {
+const ProjectList = ({projects, deleteProject, searchProject}) => {
     return (
         <>
-            <div className="mt-4 text-right">
-                <Link to="/project/create/"><button className="btn btn-info float-right">Добавить проект</button></Link>
+            <div className="mt-4 row">
+                <div className="col">
+                    <input placeholder="поиск проекта" className="form-control shadow-none"
+                           onChange={(event) => searchProject(event)}/>
+                </div>
+                <div className="col text-right">
+                    <Link to="/project/create/"><button className="btn btn-info float-right">Добавить проект</button></Link>
+                </div>
             </div>
             <table className="table mt-2">
                 <thead>

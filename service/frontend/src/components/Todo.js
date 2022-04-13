@@ -23,11 +23,22 @@ const TodoItem = ({todo, deleteTodo}) => {
     )
 }
 
-const TodoList = ({todos, deleteTodo}) => {
+const TodoList = ({todos, deleteTodo, projects, selectProject}) => {
     return (
         <>
-            <div className="mt-4 text-right">
-                <Link to="/todo/create/"><button className="btn btn-info float-right">Добавить замметку</button></Link>
+            <div className="mt-4 row">
+                <div className="col">
+                    <select className="form-select shadow-none"
+                            onChange={(event) => selectProject(event)}>
+                        <option value="">Все проекты</option>
+                        {projects.map((project, key) => (
+                            <option value={project.uid} key={key}>{project.name}</option>
+                        ))}
+                    </select>
+                </div>
+                <div className="col text-right">
+                    <Link to="/todo/create/"><button className="btn btn-info float-right">Добавить задание</button></Link>
+                </div>
             </div>
             <table className="table mt-2">
                 <thead>

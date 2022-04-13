@@ -51,7 +51,7 @@ class TodoForm extends React.Component {
                 <form className="mt-4 text-center" onSubmit={(event) => this.handleOnSubmit(event)}>
                     <div className="form-group mt-3">
                         <div className="col-md-3 margin-center">
-                            <select className="form-select" name="project" id="select-project-for-todo"
+                            <select className="form-select shadow-none" name="project" id="select-project-for-todo"
                                     onChange={(event) => this.handleOnChange(event)}>
                                 {this.props.projects.map((project, key) => (
                                     <option value={project.uid} key={key}>{project.name}</option>
@@ -61,7 +61,7 @@ class TodoForm extends React.Component {
                     </div>
                     <div className="form-group mt-3">
                         <div className="col-md-3 margin-center">
-                            <select className="form-select" name="user" id="select-user-for-todo"
+                            <select className="form-select shadow-none" name="user" id="select-user-for-todo"
                                     onChange={(event) => this.handleOnChange(event)}>
                                 {this.props.users.map((user, key) => (
                                     <option value={user.uid} key={key}>{user.firstName} {user.lastName}</option>
@@ -71,7 +71,7 @@ class TodoForm extends React.Component {
                     </div>
                     <div className="form-group mt-3">
                         <div className="col-md-3 margin-center">
-                            <textarea name="text" className="form-control" placeholder="Текст заметки" required=""
+                            <textarea name="text" className="form-control shadow-none" placeholder="Текст заметки" required=""
                                       onChange={(event) => this.handleOnChange(event)}>
                             </textarea>
                         </div>

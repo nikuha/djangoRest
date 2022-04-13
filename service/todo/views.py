@@ -40,9 +40,9 @@ class TodoModelViewSet(ModelViewSet):
     # filterset_fields = ['project']
     filterset_class = TodoFilter
 
-    def perform_destroy(self, instance):
-        instance.done = True
-        instance.save()
+    # def perform_destroy(self, instance):
+    #     instance.done = True
+    #     instance.save()
 
     def get_serializer_class(self):
         if self.request.method in ['GET']:

@@ -32,17 +32,25 @@ class App extends React.Component {
             menu: [],
             users: [],
             projects: [],
+            filteredProjects: [],
             todos: [],
             project: {},
             auth: {username: '', is_authenticated: false}
         }
     }
 
-    getApiData(name) {
-        const headers = this.getHeaders()
-        axios.get(getApiUrl(name, true), {headers})
+    getApiData(name, selected_project) {
+        const headers = this.getHeaders();
+        let url = getApiUrl(name, true);
+        if(selected_project && selected_project !== '') {
+            url += `?project=${selected_project}`
+        }
+        axios.get(url, {headers})
             .then(response => {
                 this.setState({[name]: response.data.results})
+                if(name === 'projects') {
+                    this.filterProjects()
+                }
             }).catch(error => {
                 this.checkStatus(error.response.status)
             })
@@ -95,6 +103,28 @@ class App extends React.Component {
 
     deleteProject(uid) {
         this.deleteItem(uid, 'projects', 'проект')
+    }
+
+    filterProjects(search) {
+        let filteredProjects;
+        if(search && search !== ''){
+            filteredProjects = this.state.projects.filter(el => {
+                return new RegExp(search, 'i').test(el.name)
+            });
+        }
+        else {
+            filteredProjects = this.state.projects;
+        }
+
+        this.setState({filteredProjects: filteredProjects})
+    }
+
+    searchProject(event) {
+        this.filterProjects(event.target.value)
+    }
+
+    selectProject(event) {
+        this.getApiData('todos', event.target.value)
     }
 
     createProject(projectData) {
@@ -192,15 +222,17 @@ class App extends React.Component {
             return (
                 <Routes>
                     <Route path="/users/" element={<UserList users={this.state.users}/>}/>
-                    <Route path="/projects/" element={<ProjectList projects={this.state.projects}
-                                     deleteProject={(uid) => this.deleteProject(uid)}/>}/>
+                    <Route path="/projects/" element={<ProjectList projects={this.state.filteredProjects}
+                                     deleteProject={(uid) => this.deleteProject(uid)}
+                                    searchProject={(event) => this.searchProject(event)}/>}/>
                     <Route path="/project/:uid/" element={<ProjectInfo project={this.state.project}
                                                                        getProject={(uid) => this.getProject(uid)}/>}/>
                     <Route path="/project/create/" element={<ProjectForm
                         createProject={(projectData) => this.createProject(projectData)}
                         users={this.state.users}/>}/>
-                    <Route path="/todos/" element={<TodoList todos={this.state.todos}
-                                                             deleteTodo={(uid) => this.deleteTodo(uid)}/>}/>
+                    <Route path="/todos/" element={<TodoList todos={this.state.todos}  projects={this.state.projects}
+                                                             deleteTodo={(uid) => this.deleteTodo(uid)}
+                                                             selectProject={(event) => this.selectProject(event)}/>}/>
                     <Route path="/todo/create/" element={<TodoForm
                         createTodo={(todoData) => this.createTodo(todoData)}
                         projects={this.state.projects}
