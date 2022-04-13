@@ -3,7 +3,7 @@ import {Link} from "react-router-dom";
 import React from "react";
 
 const formatDate = (date) => {
-    return format(new Date(date), 'dd.mm.yyyy H:mm')
+    return format(new Date(date), 'dd.MM.yyyy HH:mm')
 }
 
 const TodoItem = ({todo, deleteTodo}) => {

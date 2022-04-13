@@ -73,6 +73,9 @@ class App extends React.Component {
             axios.delete(getApiUrl(`${modelName}/${uid}`, true), {headers})
                 .then(response => {
                     this.setState({[modelName]: this.state[modelName].filter((item)=>item.uid !== uid)})
+                    if(modelName === 'projects') {
+                        this.filterProjects()
+                    }
                 }).catch(error => {
                     this.checkStatus(error.response.status, () => {
                         this.deleteItem(uid, modelName, ruModelName)
@@ -90,6 +93,7 @@ class App extends React.Component {
             .then(response => {
                 let item = response.data
                 this.setState({[modelName]: [item, ...this.state[modelName]]})
+                this.getApiData(modelName)
             }).catch(error => {
                 this.checkStatus(error.response.status, () => {
                     this.createItem(data, modelName)

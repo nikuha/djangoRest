@@ -46,7 +46,7 @@ class TodoForm extends React.Component {
         return (
             <>
                 <h4 className="mt-4 text-center">
-                    Добавление заметки
+                    Добавление задания
                 </h4>
                 <form className="mt-4 text-center" onSubmit={(event) => this.handleOnSubmit(event)}>
                     <div className="form-group mt-3">
@@ -71,7 +71,7 @@ class TodoForm extends React.Component {
                     </div>
                     <div className="form-group mt-3">
                         <div className="col-md-3 margin-center">
-                            <textarea name="text" className="form-control shadow-none" placeholder="Текст заметки" required=""
+                            <textarea name="text" className="form-control shadow-none" placeholder="Текст задания" required=""
                                       onChange={(event) => this.handleOnChange(event)}>
                             </textarea>
                         </div>

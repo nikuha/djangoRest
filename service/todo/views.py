@@ -35,7 +35,7 @@ class TodoLimitOffsetPagination(LimitOffsetPagination):
 
 
 class TodoModelViewSet(ModelViewSet):
-    queryset = Todo.objects.order_by('done', 'created')
+    queryset = Todo.objects.order_by('done', '-created')
     pagination_class = TodoLimitOffsetPagination
     # filterset_fields = ['project']
     filterset_class = TodoFilter
