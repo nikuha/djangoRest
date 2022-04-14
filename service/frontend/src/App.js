@@ -15,7 +15,7 @@ import {HashRouter, Routes, Route, Navigate} from "react-router-dom";
 import Cookies from 'universal-cookie';
 
 
-const API_ROOT = 'http://127.0.0.1:8000/';
+const API_ROOT = 'http://185.46.10.244:8000/';
 const API_VERSION = 'v1';
 const getApiUrl = (method, use_version) => {
     if (use_version) {
