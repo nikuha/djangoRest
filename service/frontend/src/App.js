@@ -8,6 +8,8 @@ import {Menu} from './components/Menu';
 import Footer from './components/Footer';
 import PageNotFound from './components/PageNotFound';
 import LoginForm from "./components/LoginForm";
+import ProjectForm from "./components/ProjectForm";
+import TodoForm from "./components/TodoForm";
 
 import {HashRouter, Routes, Route, Navigate} from "react-router-dom";
 import Cookies from 'universal-cookie';
@@ -16,7 +18,7 @@ import Cookies from 'universal-cookie';
 const API_ROOT = 'http://127.0.0.1:8000/';
 const API_VERSION = 'v1';
 const getApiUrl = (method, use_version) => {
-    if(use_version) {
+    if (use_version) {
         return `${API_ROOT}api/${API_VERSION}/${method}/`
     }
     return `${API_ROOT}api/${method}/`
@@ -30,21 +32,26 @@ class App extends React.Component {
             menu: [],
             users: [],
             projects: [],
+            filteredProjects: [],
             todos: [],
             project: {},
-            auth: {username: '', is_authenticated: false}
+            auth: {username: '', is_authenticated: false},
+            projectsFilters: {text: ''},
+            todosFilters: {project: ''}
         }
     }
 
-    getApiData(name) {
-        const headers = this.getHeaders()
-        axios.get(getApiUrl(name, true), {headers})
+    getApiData(name, selected_project) {
+        const config = {headers: this.getHeaders()}
+        if (name === 'todos' && this.state.todosFilters.project !== '') {
+            config['params'] = {project: this.state.todosFilters.project}
+        }
+        axios.get(getApiUrl(name, true), config)
             .then(response => {
-                this.setState({[name]: response.data.results})
+                const callback = name === 'projects' ? () => this.filterProjects() : null;
+                this.setState({[name]: response.data.results}, callback)
             }).catch(error => {
-                if(error.response.status === 401){
-                    this.refresh()
-                }
+                this.checkStatus(error.response.status, () => this.getApiData(name, selected_project))
             })
     }
 
@@ -54,17 +61,87 @@ class App extends React.Component {
             .then(response => {
                 this.setState({project: response.data})
             }).catch(error => {
-                if(error.response.status === 401){
-                    this.refresh()
-                }
-                this.setState({project: {uid: uid}})
+                this.checkStatus(error.response.status, () => this.getProject(uid))
             })
+    }
+
+    deleteItem(uid, modelName, ruModelName) {
+        if (window.confirm(`Вы действительно хотите удалить ${ruModelName}?`)) {
+            const headers = this.getHeaders()
+            axios.delete(getApiUrl(`${modelName}/${uid}`, true), {headers})
+                .then(response => {
+                    const callback = modelName === 'projects' ? () => this.filterProjects() : null;
+                    this.setState({[modelName]: this.state[modelName].filter((item) => item.uid !== uid)},
+                        callback)
+                }).catch(error => {
+                    this.checkStatus(error.response.status,
+                        () => {this.deleteItem(uid, modelName, ruModelName)}
+                    )
+                })
+        }
+    }
+
+    createItem(data, modelName) {
+        // console.log(data)
+        const headers = this.getHeaders()
+        axios.post(getApiUrl(`${modelName}`, true),
+            data,
+            {headers})
+            .then(response => {
+                let item = response.data
+                this.setState({[modelName]: [item, ...this.state[modelName]]})
+                this.getApiData(modelName)
+            }).catch(error => {
+                this.checkStatus(error.response.status,
+                    () => {this.createItem(data, modelName)}
+                )
+            })
+    }
+
+    deleteTodo(uid) {
+        this.deleteItem(uid, 'todos', 'задачу')
+    }
+
+    deleteProject(uid) {
+        this.deleteItem(uid, 'projects', 'проект')
+    }
+
+    filterProjects() {
+        let filteredProjects;
+        if (this.state.projectsFilters.text !== '') {
+            filteredProjects = this.state.projects.filter(el => {
+                return new RegExp(this.state.projectsFilters.text, 'i').test(el.name)
+            });
+        } else {
+            filteredProjects = this.state.projects;
+        }
+
+        this.setState({filteredProjects: filteredProjects})
+    }
+
+    searchProject(event) {
+        this.setState({projectsFilters: {text: event.target.value}},
+            () => this.filterProjects())
+    }
+
+    selectProject(event) {
+        this.setState({todosFilters: {project: event.target.value}},
+            () => this.getApiData('todos'))
+    }
+
+    createProject(projectData) {
+        this.createItem(projectData, 'projects')
+    }
+
+    createTodo(todoData) {
+        this.createItem(todoData, 'todos')
     }
 
     setAuthState(username, is_authenticated) {
         this.setState({
-            auth: {username: username, is_authenticated: is_authenticated}},
-            ()=>this.loadData()
+                auth: {username: username, is_authenticated: is_authenticated}
+            },
+            () => this.loadData()
         )
     }
 
@@ -86,7 +163,13 @@ class App extends React.Component {
             }).catch(error => alert('Неверные данные авторизации!'))
     }
 
-    refresh() {
+    checkStatus(statusCode, success_callback) {
+        if (statusCode === 401) {
+            this.refresh(success_callback)
+        }
+    }
+
+    refresh(success_callback) {
         const cookies = new Cookies()
         const refresh = cookies.get('refresh')
         axios.post(getApiUrl('jwt/token/refresh'), {refresh: refresh})
@@ -94,6 +177,9 @@ class App extends React.Component {
                 const username = cookies.get('username')
                 cookies.set('access', response.data.access)
                 this.setAuthState(username, true)
+                if (success_callback) {
+                    success_callback()
+                }
             }).catch(error => this.logout())
     }
 
@@ -114,12 +200,11 @@ class App extends React.Component {
     }
 
     loadData() {
-        if(this.state.auth.is_authenticated){
+        if (this.state.auth.is_authenticated) {
             this.getApiData('users')
             this.getApiData('projects')
             this.getApiData('todos')
-        }
-        else {
+        } else {
             this.setState({users: [], projects: [], todos: []})
         }
     }
@@ -127,11 +212,53 @@ class App extends React.Component {
     componentDidMount() {
         this.getTokenFromStorage()
         const menu = [
-            {name: 'Пользователи', link: '/'},
+            {name: 'Пользователи', link: '/users/'},
             {name: 'Проекты', link: '/projects/'},
             {name: 'Todo', link: '/todos/'}
         ]
         this.setState({'menu': menu})
+    }
+
+    routers() {
+        if (this.state.auth.is_authenticated) {
+            return (
+                <Routes>
+                    <Route path="/users/" element={<UserList users={this.state.users}/>}/>
+                    <Route path="/projects/" element={<ProjectList
+                        projects={this.state.filteredProjects}
+                        projectsFilters={this.state.projectsFilters}
+                        deleteProject={(uid) => this.deleteProject(uid)}
+                        searchProject={(event) => this.searchProject(event)}/>}/>
+                    <Route path="/project/:uid/" element={<ProjectInfo project={this.state.project}
+                                                                       getProject={(uid) => this.getProject(uid)}/>}/>
+                    <Route path="/project/create/" element={<ProjectForm
+                        createProject={(projectData) => this.createProject(projectData)}
+                        users={this.state.users}/>}/>
+                    <Route path="/todos/" element={<TodoList todos={this.state.todos} projects={this.state.projects}
+                                                             todosFilters={this.state.todosFilters}
+                                                             deleteTodo={(uid) => this.deleteTodo(uid)}
+                                                             selectProject={(event) => this.selectProject(event)}/>}/>
+                    <Route path="/todo/create/" element={<TodoForm
+                        createTodo={(todoData) => this.createTodo(todoData)}
+                        projects={this.state.projects}
+                        users={this.state.users}/>}/>
+                    <Route path="/login/" element={<Navigate replace to="/projects"/>}/>}/>
+                    <Route path="/" element={<Navigate replace to="/users/"/>}/>
+                    <Route path="*" element={<PageNotFound/>}/>
+                </Routes>
+            )
+        }
+        return (
+            <Routes>
+                <Route path="/" element={<Navigate replace to="/login/"/>}/>
+                <Route path="/users/" element={<Navigate replace to="/login/"/>}/>
+                <Route path="/projects/" element={<Navigate replace to="/login/"/>}/>
+                <Route path="/todos/" element={<Navigate replace to="/login/"/>}/>
+                <Route path="/login/" element={
+                    <LoginForm login={(username, password) => this.login(username, password)}/>}/>
+                <Route path="*" element={<PageNotFound/>}/>
+            </Routes>
+        )
     }
 
     render() {
@@ -140,24 +267,7 @@ class App extends React.Component {
                 <HashRouter>
                     <Menu menu={this.state.menu} auth={this.state.auth} logout={() => this.logout()}/>
                     <div className="container">
-                        <Routes>
-                            <Route path="/" element={this.state.auth.is_authenticated ?
-                                <UserList users={this.state.users}/> :
-                                <Navigate replace to="/login/" />} />
-                            <Route path="/projects/" element={this.state.auth.is_authenticated ?
-                                <ProjectList projects={this.state.projects}/>:
-                                <Navigate replace to="/login/" />} />
-                            <Route path="/project/:uid/" element={this.state.auth.is_authenticated ?
-                                <ProjectInfo project={this.state.project} getProject={(uid) => this.getProject(uid)}/> :
-                                <Navigate replace to="/login/" />}/>
-                            <Route path="/todos/" element={this.state.auth.is_authenticated ?
-                                <TodoList todos={this.state.todos}/>:
-                                <Navigate replace to="/login/" />} />
-                            <Route path="/users/" element={<Navigate replace to="/" />} />
-                            <Route path="/login/" element={this.state.auth.is_authenticated ? <Navigate replace to="/projects" /> :
-                                <LoginForm login={(username, password) => this.login(username, password)}/>} />
-                            <Route path="*"  element={<PageNotFound/>} />
-                        </Routes>
+                        {this.routers()}
                     </div>
                 </HashRouter>
 

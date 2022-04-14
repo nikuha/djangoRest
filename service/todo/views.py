@@ -35,14 +35,14 @@ class TodoLimitOffsetPagination(LimitOffsetPagination):
 
 
 class TodoModelViewSet(ModelViewSet):
-    queryset = Todo.objects.all()
+    queryset = Todo.objects.order_by('done', '-created')
     pagination_class = TodoLimitOffsetPagination
     # filterset_fields = ['project']
     filterset_class = TodoFilter
 
-    def perform_destroy(self, instance):
-        instance.done = True
-        instance.save()
+    # def perform_destroy(self, instance):
+    #     instance.done = True
+    #     instance.save()
 
     def get_serializer_class(self):
         if self.request.method in ['GET']:
