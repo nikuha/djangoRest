@@ -23,12 +23,12 @@ const TodoItem = ({todo, deleteTodo}) => {
     )
 }
 
-const TodoList = ({todos, deleteTodo, projects, selectProject}) => {
+const TodoList = ({todos, todosFilters, deleteTodo, projects, selectProject}) => {
     return (
         <>
             <div className="mt-4 row">
                 <div className="col">
-                    <select className="form-select shadow-none"
+                    <select className="form-select shadow-none" defaultValue={todosFilters.project}
                             onChange={(event) => selectProject(event)}>
                         <option value="">Все проекты</option>
                         {projects.map((project, key) => (

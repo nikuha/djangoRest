@@ -35,24 +35,23 @@ class App extends React.Component {
             filteredProjects: [],
             todos: [],
             project: {},
-            auth: {username: '', is_authenticated: false}
+            auth: {username: '', is_authenticated: false},
+            projectsFilters: {text: ''},
+            todosFilters: {project: ''}
         }
     }
 
     getApiData(name, selected_project) {
-        const headers = this.getHeaders();
-        let url = getApiUrl(name, true);
-        if(selected_project && selected_project !== '') {
-            url += `?project=${selected_project}`
+        const config = {headers: this.getHeaders()}
+        if (name === 'todos' && this.state.todosFilters.project !== '') {
+            config['params'] = {project: this.state.todosFilters.project}
         }
-        axios.get(url, {headers})
+        axios.get(getApiUrl(name, true), config)
             .then(response => {
-                this.setState({[name]: response.data.results})
-                if(name === 'projects') {
-                    this.filterProjects()
-                }
+                const callback = name === 'projects' ? () => this.filterProjects() : null;
+                this.setState({[name]: response.data.results}, callback)
             }).catch(error => {
-                this.checkStatus(error.response.status)
+                this.checkStatus(error.response.status, () => this.getApiData(name, selected_project))
             })
     }
 
@@ -62,24 +61,22 @@ class App extends React.Component {
             .then(response => {
                 this.setState({project: response.data})
             }).catch(error => {
-                this.checkStatus(error.response.status)
-                this.setState({project: {uid: uid}})
+                this.checkStatus(error.response.status, () => this.getProject(uid))
             })
     }
 
     deleteItem(uid, modelName, ruModelName) {
-        if(window.confirm(`Вы действительно хотите удалить ${ruModelName}?`)){
+        if (window.confirm(`Вы действительно хотите удалить ${ruModelName}?`)) {
             const headers = this.getHeaders()
             axios.delete(getApiUrl(`${modelName}/${uid}`, true), {headers})
                 .then(response => {
-                    this.setState({[modelName]: this.state[modelName].filter((item)=>item.uid !== uid)})
-                    if(modelName === 'projects') {
-                        this.filterProjects()
-                    }
+                    const callback = modelName === 'projects' ? () => this.filterProjects() : null;
+                    this.setState({[modelName]: this.state[modelName].filter((item) => item.uid !== uid)},
+                        callback)
                 }).catch(error => {
-                    this.checkStatus(error.response.status, () => {
-                        this.deleteItem(uid, modelName, ruModelName)
-                    })
+                    this.checkStatus(error.response.status,
+                        () => {this.deleteItem(uid, modelName, ruModelName)}
+                    )
                 })
         }
     }
@@ -88,16 +85,16 @@ class App extends React.Component {
         // console.log(data)
         const headers = this.getHeaders()
         axios.post(getApiUrl(`${modelName}`, true),
-                data,
-                {headers})
+            data,
+            {headers})
             .then(response => {
                 let item = response.data
                 this.setState({[modelName]: [item, ...this.state[modelName]]})
                 this.getApiData(modelName)
             }).catch(error => {
-                this.checkStatus(error.response.status, () => {
-                    this.createItem(data, modelName)
-                })
+                this.checkStatus(error.response.status,
+                    () => {this.createItem(data, modelName)}
+                )
             })
     }
 
@@ -109,14 +106,13 @@ class App extends React.Component {
         this.deleteItem(uid, 'projects', 'проект')
     }
 
-    filterProjects(search) {
+    filterProjects() {
         let filteredProjects;
-        if(search && search !== ''){
+        if (this.state.projectsFilters.text !== '') {
             filteredProjects = this.state.projects.filter(el => {
-                return new RegExp(search, 'i').test(el.name)
+                return new RegExp(this.state.projectsFilters.text, 'i').test(el.name)
             });
-        }
-        else {
+        } else {
             filteredProjects = this.state.projects;
         }
 
@@ -124,11 +120,13 @@ class App extends React.Component {
     }
 
     searchProject(event) {
-        this.filterProjects(event.target.value)
+        this.setState({projectsFilters: {text: event.target.value}},
+            () => this.filterProjects())
     }
 
     selectProject(event) {
-        this.getApiData('todos', event.target.value)
+        this.setState({todosFilters: {project: event.target.value}},
+            () => this.getApiData('todos'))
     }
 
     createProject(projectData) {
@@ -179,7 +177,7 @@ class App extends React.Component {
                 const username = cookies.get('username')
                 cookies.set('access', response.data.access)
                 this.setAuthState(username, true)
-                if(success_callback) {
+                if (success_callback) {
                     success_callback()
                 }
             }).catch(error => this.logout())
@@ -222,19 +220,22 @@ class App extends React.Component {
     }
 
     routers() {
-        if(this.state.auth.is_authenticated) {
+        if (this.state.auth.is_authenticated) {
             return (
                 <Routes>
                     <Route path="/users/" element={<UserList users={this.state.users}/>}/>
-                    <Route path="/projects/" element={<ProjectList projects={this.state.filteredProjects}
-                                     deleteProject={(uid) => this.deleteProject(uid)}
-                                    searchProject={(event) => this.searchProject(event)}/>}/>
+                    <Route path="/projects/" element={<ProjectList
+                        projects={this.state.filteredProjects}
+                        projectsFilters={this.state.projectsFilters}
+                        deleteProject={(uid) => this.deleteProject(uid)}
+                        searchProject={(event) => this.searchProject(event)}/>}/>
                     <Route path="/project/:uid/" element={<ProjectInfo project={this.state.project}
                                                                        getProject={(uid) => this.getProject(uid)}/>}/>
                     <Route path="/project/create/" element={<ProjectForm
                         createProject={(projectData) => this.createProject(projectData)}
                         users={this.state.users}/>}/>
-                    <Route path="/todos/" element={<TodoList todos={this.state.todos}  projects={this.state.projects}
+                    <Route path="/todos/" element={<TodoList todos={this.state.todos} projects={this.state.projects}
+                                                             todosFilters={this.state.todosFilters}
                                                              deleteTodo={(uid) => this.deleteTodo(uid)}
                                                              selectProject={(event) => this.selectProject(event)}/>}/>
                     <Route path="/todo/create/" element={<TodoForm

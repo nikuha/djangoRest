@@ -16,12 +16,13 @@ const ProjectItem = ({project, deleteProject}) => {
     )
 }
 
-const ProjectList = ({projects, deleteProject, searchProject}) => {
+const ProjectList = ({projects, projectsFilters, deleteProject, searchProject}) => {
     return (
         <>
             <div className="mt-4 row">
                 <div className="col">
                     <input placeholder="поиск проекта" className="form-control shadow-none"
+                           value={projectsFilters.text}
                            onChange={(event) => searchProject(event)}/>
                 </div>
                 <div className="col text-right">
