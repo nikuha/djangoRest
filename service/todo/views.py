@@ -13,7 +13,7 @@ from .filters import ProjectFilter, TodoFilter
 
 
 class ProjectLimitOffsetPagination(LimitOffsetPagination):
-    default_limit = 10
+    default_limit = 20
 
 
 class ProjectModelViewSet(ModelViewSet):

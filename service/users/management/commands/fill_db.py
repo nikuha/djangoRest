@@ -11,6 +11,9 @@ from django.db.models import F
 class Command(BaseCommand):
     def handle(self, *args, **options):
 
+        User.objects.all().delete()
+        Project.objects.all().delete()
+
         if not User.objects.filter(username='django').exists():
             User.objects.create_superuser(username='django', first_name='Django', last_name='Rest',
                                           email='django@rest.local', password='geekbrains')
